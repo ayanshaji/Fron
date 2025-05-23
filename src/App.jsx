@@ -72,7 +72,8 @@ function App() {
             <Route path="/add" element={<AddBook books={books} setBooks={setBooks} />} />
            <Route path="/view" element={<ViewBooks books={books} userRole={userRole} />} />
             <Route path="/borrow" element={<BorrowBook books={books} setBooks={setBooks} />} />
-            <Route path="/edit/:id" element={<EditBook books={books} setBooks={setBooks} />} />
+           
+            <Route path="/edit/:id" element={<EditBook books={books} setBooks={setBooks} userRole={userRole} />} />
             <Route path="/details/:id" element={<BookDetails books={books} />} />
             <Route path="/reviews/:id" element={<BookReviews books={books} setBooks={setBooks} />} />
             

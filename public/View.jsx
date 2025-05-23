@@ -1,14 +1,12 @@
-
 import {
   Container, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Button, Box, FormControl,
   InputLabel, Select, MenuItem, OutlinedInput, Checkbox,
   ListItemText, TextField
 } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import axios from 'axios';
 
 const FINE_PER_DAY = 2;
 const BORROW_PERIOD_DAYS = 15;
@@ -20,16 +18,12 @@ const STATIC_GENRES = [
   "Children", "Young Adult", "Graphic Novel", "Cooking", "Travel"
 ];
 
-const ViewBooks = ({ books, setBooks, userRole, username }) => {
+const ViewBooks = ({ books, setBooks, userRole }) => {
   const [genreFilter, setGenreFilter] = useState([]);
   const [yearFilter, setYearFilter] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const username = "User1"; // Replace with real user if needed
   const navigate = useNavigate();
-
-  // Debug books data
-  useEffect(() => {
-    console.log('Books data:', books);
-  }, [books]);
 
   const calculateFine = (borrowDate) => {
     if (!borrowDate) return 0;
@@ -53,30 +47,6 @@ const ViewBooks = ({ books, setBooks, userRole, username }) => {
     setSearchTerm('');
   };
 
-  const handleDelete = async (id) => {
-    if (!id) {
-      console.error('Delete failed: ID is undefined');
-      toast.error('Cannot delete book: Invalid ID');
-      return;
-    }
-    console.log('Attempting to delete book with id:', id);
-    if (!window.confirm('Are you sure you want to delete this book?')) return;
-
-    try {
-      const response = await axios.delete(`http://localhost:3004/api/books/${id}`);
-      console.log('Delete response:', response.data);
-      setBooks((prevBooks) => {
-        const updatedBooks = prevBooks.filter((book) => book.id !== id);
-        console.log('Updated books state:', updatedBooks);
-        return updatedBooks;
-      });
-      toast.success('Book deleted successfully!');
-    } catch (error) {
-      console.error('Error deleting book:', error.response?.data || error.message);
-      toast.error(error.response?.data?.message || 'Failed to delete book');
-    }
-  };
-
   const filteredBooks = books.filter(book => {
     const matchesGenres = genreFilter.length === 0 || genreFilter.includes(book.genre);
     const matchesYears = yearFilter.length === 0 || yearFilter.includes(String(book.published));
@@ -87,9 +57,32 @@ const ViewBooks = ({ books, setBooks, userRole, username }) => {
     return matchesGenres && matchesYears && matchesSearch;
   });
 
+  const handleDelete = async (bookId) => {
+  if (!window.confirm('Are you sure you want to delete this book?')) return;
+
+  try {
+    const response = await fetch(`http://localhost:5000/api/books/${bookId}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete book');
+    }
+
+    // Update local state
+    setBooks(prevBooks => prevBooks.filter(book => book._id !== bookId));
+    toast.success('Book deleted successfully');
+  } catch (err) {
+    toast.error(`Error: ${err.message}`);
+  }
+};
+
+
   return (
     <Container sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>Library Books</Typography>
+
+      {/* Filters */}
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
         <FormControl size="small" sx={{ minWidth: 200 }}>
           <InputLabel>Filter by Genre</InputLabel>
@@ -108,6 +101,7 @@ const ViewBooks = ({ books, setBooks, userRole, username }) => {
             ))}
           </Select>
         </FormControl>
+
         <FormControl size="small" sx={{ minWidth: 150 }}>
           <InputLabel>Filter by Year</InputLabel>
           <Select
@@ -125,6 +119,7 @@ const ViewBooks = ({ books, setBooks, userRole, username }) => {
             ))}
           </Select>
         </FormControl>
+
         <TextField
           size="small"
           label="Search Title/Author"
@@ -133,6 +128,7 @@ const ViewBooks = ({ books, setBooks, userRole, username }) => {
           onChange={(e) => setSearchTerm(e.target.value)}
           sx={{ minWidth: 200 }}
         />
+
         <Button
           variant="outlined"
           color="secondary"
@@ -142,6 +138,8 @@ const ViewBooks = ({ books, setBooks, userRole, username }) => {
           Clear Filters
         </Button>
       </Box>
+
+      {/* Table */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -200,28 +198,22 @@ const ViewBooks = ({ books, setBooks, userRole, username }) => {
                     >
                       Reviews
                     </Button>
-                    {userRole === 'admin' && (
-                      <>
-                        <Button
-                          variant="outlined"
-                          color="primary"
-                          size="small"
-                          component={Link}
-                          to={`/edit/${book.id}`}
-                          sx={{ mr: 1 }}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          size="small"
-                          onClick={() => handleDelete(book.id)}
-                        >
-                          Delete
-                        </Button>
-                      </>
-                    )}
+                   {userRole === 'admin' && (
+  <Button
+    variant="outlined"
+    color="primary"
+    size="small"
+    component={Link}
+    to={`/edit/${book.id}`}
+  >
+    Edit
+    </Button>
+    
+
+     
+  
+)}
+
                   </TableCell>
                 </TableRow>
               );
@@ -229,8 +221,12 @@ const ViewBooks = ({ books, setBooks, userRole, username }) => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Optional test button for Toast */}
+     
     </Container>
   );
 };
 
-export default ViewBooks;
+export default ViewBooks; 
+
